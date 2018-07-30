@@ -12,6 +12,8 @@ public class DateTimeConstants {
     
     public static final int WORKING_DAY_END_HOUR = 17;
     
+    public static final int MINIMUM_ACCEPTED_TURNAROUND_TIME_IN_HOURS = 1;
+    
     public static final int NUMBER_OF_WEEKEND_HOURS = 48;
     
     public static final int NUMBER_OF_WORKING_HOURS_PER_DAY = WORKING_DAY_END_HOUR - WORKING_DAY_START_HOUR;

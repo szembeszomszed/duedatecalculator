@@ -21,7 +21,7 @@ public class DueDateCalculator {
     public DueDateCalculator(String reportIssueDateInput, int turnaroundTimeInHours) {
         setReportIssueDate(reportIssueDateInput);
         setReportIssueDateTime();
-        setTurnaroundTime(turnaroundTimeInHours);        
+        setTurnaroundTimeInHours(turnaroundTimeInHours);        
     }
 
     private void setReportIssueDate(String reportIssueDateInput) {
@@ -48,12 +48,18 @@ public class DueDateCalculator {
         
         return dateFormat.parse(dateTimeReported);        
     }
+    
+    public int getTurnaroundTimeInHours() {
+        return this.turnaroundTimeInHours;
+    }
 
-    private void setTurnaroundTime(int turnaroundTimeInHours) {
+    private void setTurnaroundTimeInHours(int turnaroundTimeInHours) {
         this.turnaroundTimeInHours = 
-            turnaroundTimeInHours > 0 ? turnaroundTimeInHours : 0;
+            turnaroundTimeInHours > DateTimeConstants.MINIMUM_ACCEPTED_TURNAROUND_TIME_IN_HOURS ? 
+            turnaroundTimeInHours : 
+            DateTimeConstants.MINIMUM_ACCEPTED_TURNAROUND_TIME_IN_HOURS;
 
-        this.remainingTurnaroundTimeInHours = turnaroundTimeInHours;       
+        this.remainingTurnaroundTimeInHours = this.turnaroundTimeInHours;       
     }
 
     private boolean isReportIssuedDuringWorkingHours() {
