@@ -55,11 +55,15 @@ public class DueDateCalculator {
 
     private void setTurnaroundTimeInHours(int turnaroundTimeInHours) {
         this.turnaroundTimeInHours = 
-            turnaroundTimeInHours > DateTimeConstants.MINIMUM_ACCEPTED_TURNAROUND_TIME_IN_HOURS ? 
+            isValidTurnaroundTime(turnaroundTimeInHours) ? 
             turnaroundTimeInHours : 
             DateTimeConstants.MINIMUM_ACCEPTED_TURNAROUND_TIME_IN_HOURS;
 
         this.remainingTurnaroundTimeInHours = this.turnaroundTimeInHours;       
+    }
+    
+    private boolean isValidTurnaroundTime(int turnaroundTimeInHours) {
+        return turnaroundTimeInHours > DateTimeConstants.MINIMUM_ACCEPTED_TURNAROUND_TIME_IN_HOURS;
     }
 
     private boolean isReportIssuedDuringWorkingHours() {
