@@ -43,14 +43,14 @@ public class DueDateCalculator {
         }
     }
 
-    private Date getDateFromInputString(String dateTimeReported) throws ParseException {
+    private static Date getDateFromInputString(String dateTimeReported) throws ParseException {
         DateFormat dateFormat = new SimpleDateFormat(DateTimeConstants.DATE_FORMAT);
         
         return dateFormat.parse(dateTimeReported);        
     }
     
     public int getTurnaroundTimeInHours() {
-        return this.turnaroundTimeInHours;
+        return turnaroundTimeInHours;
     }
 
     private void setTurnaroundTimeInHours(int turnaroundTimeInHours) {
@@ -133,7 +133,7 @@ public class DueDateCalculator {
             DateTimeConstants.NUMBER_OF_NON_WORKING_HOURS_PER_DAY);
     }
     
-    private boolean isWeekend(Calendar actualDay) {
+    private static boolean isWeekend(Calendar actualDay) {
         return (actualDay.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || 
             actualDay.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY);
     }
@@ -164,7 +164,7 @@ public class DueDateCalculator {
         }
     }
     
-    private Calendar getActualTimeOf(Calendar actualDay, int hour) {
+    private static Calendar getActualTimeOf(Calendar actualDay, int hour) {
         Calendar actualTime = Calendar.getInstance();
         int minute = 0;
         int second = 0;
