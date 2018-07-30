@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package hu.retsagimate.duedatecalculator;
 
 import java.text.DateFormat;
@@ -19,6 +14,7 @@ public class DueDateCalculator {
 
     private Date reportIssueDate;
     private Calendar reportIssueDateTime;
+    private Calendar dueDateTime;
     private int remainingTurnaroundTimeInHours;
     private int turnaroundTimeInHours;
 
@@ -38,8 +34,17 @@ public class DueDateCalculator {
         }
     }
 
+    private void setReportIssueDateTime() {
+        reportIssueDateTime = Calendar.getInstance();
+        reportIssueDateTime.setTime(reportIssueDate);  
+
+        if (!isReportIssuedDuringWorkingHours()) {
+            throw new IllegalArgumentException("Report must be issued during working hours.");
+        }
+    }
+
     private Date getDateFromInputString(String dateTimeReported) throws ParseException {
-        DateFormat dateFormat = new SimpleDateFormat(DateConstants.INPUT_DATE_FORMAT);
+        DateFormat dateFormat = new SimpleDateFormat(DateConstants.DATE_FORMAT);
         
         return dateFormat.parse(dateTimeReported);        
     }
@@ -51,22 +56,13 @@ public class DueDateCalculator {
         this.remainingTurnaroundTimeInHours = turnaroundTimeInHours;       
     }
 
-    private void setReportIssueDateTime() {
-        reportIssueDateTime = Calendar.getInstance();
-        reportIssueDateTime.setTime(reportIssueDate);  
-
-        if (!isReportIssuedDuringWorkingHours()) {
-            throw new IllegalArgumentException("Report must be issued during working hours.");
-        }
-    }
-
     private boolean isReportIssuedDuringWorkingHours() {
         Calendar workingHourStart = 
-            getTimeOf(reportIssueDateTime, DateConstants.WORKING_DAY_START_HOUR);
+            getActualTimeOf(reportIssueDateTime, DateConstants.WORKING_DAY_START_HOUR);
         workingHourStart.add(Calendar.MINUTE, -1);
 
         Calendar workingHourEnd = 
-            getTimeOf(reportIssueDateTime, DateConstants.WORKING_DAY_END_HOUR);
+            getActualTimeOf(reportIssueDateTime, DateConstants.WORKING_DAY_END_HOUR);
 
         return workingHourStart.before(reportIssueDateTime) && 
             workingHourEnd.after(reportIssueDateTime) && 
@@ -74,17 +70,17 @@ public class DueDateCalculator {
     }
 
     public Date calculateDueDate() {
-        Calendar dueDateTime = reportIssueDateTime;
+        dueDateTime = reportIssueDateTime;
 
         if (turnAroundTimeFitsIn(reportIssueDateTime)) {
             dueDateTime.add(Calendar.HOUR_OF_DAY, turnaroundTimeInHours);            
         } else {
-            int remainingWorkingHours = getRemainingWorkingHours(dueDateTime);           
-
-            remainingTurnaroundTimeInHours = turnaroundTimeInHours - remainingWorkingHours;
+            int remainingWorkingHours = getRemainingWorkingHours(dueDateTime); 
             dueDateTime.add(Calendar.HOUR_OF_DAY, remainingWorkingHours);
+            
+            remainingTurnaroundTimeInHours = turnaroundTimeInHours - remainingWorkingHours;
 
-            adjustDueDateTime(dueDateTime);            
+            adjustDueDateTime();            
         }
 
         return dueDateTime.getTime();
@@ -95,23 +91,18 @@ public class DueDateCalculator {
             DateConstants.ONE_HOUR_IN_MILLISECONDS);
     }
 
-    private boolean turnAroundTimeFitsIn(Calendar actualDay) {
-        return getRemainingWorkingTimeInMillisecondsOn(actualDay) >= 
-            remainingTurnaroundTimeInHours * DateConstants.ONE_HOUR_IN_MILLISECONDS;
-    }
-
     private long getRemainingWorkingTimeInMillisecondsOn(Calendar actualDay) {
-        Calendar workingHourEndTime = getTimeOf(actualDay, DateConstants.WORKING_DAY_END_HOUR);
+        Calendar workingHourEndTime = getActualTimeOf(actualDay, DateConstants.WORKING_DAY_END_HOUR);
         
         return workingHourEndTime.getTimeInMillis() - actualDay.getTimeInMillis();        
     }
 
-    private void adjustDueDateTime(Calendar dueDateTime) {
+    private void adjustDueDateTime() {
         do {
-            addNonWorkingHours(dueDateTime);
+            addNonWorkingHours();
 
             if (isWeekend(dueDateTime)) {
-                addWeekendHours(dueDateTime);
+                addWeekendHours();
             }
 
             dueDateTime.add(
@@ -125,6 +116,28 @@ public class DueDateCalculator {
 
         } while (!turnAroundTimeFitsIn(dueDateTime));       
     }
+    
+    private boolean turnAroundTimeFitsIn(Calendar actualDay) {
+        return getRemainingWorkingTimeInMillisecondsOn(actualDay) >= 
+                remainingTurnaroundTimeInHours * DateConstants.ONE_HOUR_IN_MILLISECONDS;
+    }
+    
+    private void addNonWorkingHours() {
+        dueDateTime.add(
+                Calendar.HOUR_OF_DAY, 
+                DateConstants.NUMBER_OF_NON_WORKING_HOURS_PER_DAY);
+    }
+    
+    private boolean isWeekend(Calendar actualDay) {
+        return (actualDay.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || 
+                actualDay.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY);
+    }
+    
+    private void addWeekendHours() {
+        dueDateTime.add(
+                Calendar.HOUR_OF_DAY, 
+                DateConstants.NUMBER_OF_WEEKEND_HOURS);
+    }
 
     private void updateRemainingTurnaroundTime() {
         if (remainingTurnaroundTimeInHours > DateConstants.NUMBER_OF_WORKING_HOURS_PER_DAY) {
@@ -133,30 +146,13 @@ public class DueDateCalculator {
             remainingTurnaroundTimeInHours = 0;
         }
     }
-
-    private void addNonWorkingHours(Calendar dueDateTime) {
-        dueDateTime.add(
-            Calendar.HOUR_OF_DAY, 
-            DateConstants.NUMBER_OF_NON_WORKING_HOURS_PER_DAY);
-    }
-
-    private void addWeekendHours(Calendar dueDateTime) {
-        dueDateTime.add(
-            Calendar.HOUR_OF_DAY, 
-            DateConstants.NUMBER_OF_WEEKEND_HOURS);
-    }
-
-    public boolean isWeekend(Calendar dueDateTime) {
-        return (dueDateTime.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || 
-            dueDateTime.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY);
-    }
     
-    private Calendar getTimeOf(Calendar actualDay, int hour) {
-        Calendar time = Calendar.getInstance();
+    private Calendar getActualTimeOf(Calendar actualDay, int hour) {
+        Calendar actualTime = Calendar.getInstance();
         int minute = 0;
         int second = 0;
 
-        time.set(
+        actualTime.set(
             actualDay.get(Calendar.YEAR),
             actualDay.get(Calendar.MONTH),
             actualDay.get(Calendar.DAY_OF_MONTH),
@@ -164,6 +160,6 @@ public class DueDateCalculator {
             minute,
             second);       
         
-        return time;
+        return actualTime;
     }
 }
