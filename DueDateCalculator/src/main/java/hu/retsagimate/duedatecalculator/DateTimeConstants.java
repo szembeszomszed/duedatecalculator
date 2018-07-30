@@ -4,9 +4,9 @@ package hu.retsagimate.duedatecalculator;
  *
  * @author retsagimate
  */
-public class DateConstants {
+public class DateTimeConstants {
     
-    private DateConstants() {        
+    private DateTimeConstants() {        
     }
     
     public static final String DATE_FORMAT = "dd-MM-yyyy KK:mma";

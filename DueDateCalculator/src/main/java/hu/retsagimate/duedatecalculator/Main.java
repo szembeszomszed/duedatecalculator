@@ -10,7 +10,7 @@ import java.util.Date;
  */
 public class Main {
     public static void main(String[] args) {
-        DateFormat dateFormat = new SimpleDateFormat(DateConstants.DATE_FORMAT); 
+        DateFormat dateFormat = new SimpleDateFormat(DateTimeConstants.DATE_FORMAT); 
         
         String reportIsseDate1 = "02-08-2018 1:30PM";
         int turnaroundTimeInHours1 = 2;

@@ -44,7 +44,7 @@ public class DueDateCalculator {
     }
 
     private Date getDateFromInputString(String dateTimeReported) throws ParseException {
-        DateFormat dateFormat = new SimpleDateFormat(DateConstants.DATE_FORMAT);
+        DateFormat dateFormat = new SimpleDateFormat(DateTimeConstants.DATE_FORMAT);
         
         return dateFormat.parse(dateTimeReported);        
     }
@@ -58,11 +58,11 @@ public class DueDateCalculator {
 
     private boolean isReportIssuedDuringWorkingHours() {
         Calendar workingHourStart = 
-            getActualTimeOf(reportIssueDateTime, DateConstants.WORKING_DAY_START_HOUR);
+            getActualTimeOf(reportIssueDateTime, DateTimeConstants.WORKING_DAY_START_HOUR);
         workingHourStart.add(Calendar.MINUTE, -1);
 
         Calendar workingHourEnd = 
-            getActualTimeOf(reportIssueDateTime, DateConstants.WORKING_DAY_END_HOUR);
+            getActualTimeOf(reportIssueDateTime, DateTimeConstants.WORKING_DAY_END_HOUR);
 
         return workingHourStart.before(reportIssueDateTime) && 
             workingHourEnd.after(reportIssueDateTime) && 
@@ -88,11 +88,11 @@ public class DueDateCalculator {
 
     private int getRemainingWorkingHours(Calendar dueDateTime) {
         return (int) (getRemainingWorkingTimeInMillisecondsOn(dueDateTime) / 
-            DateConstants.ONE_HOUR_IN_MILLISECONDS);
+            DateTimeConstants.ONE_HOUR_IN_MILLISECONDS);
     }
 
     private long getRemainingWorkingTimeInMillisecondsOn(Calendar actualDay) {
-        Calendar workingHourEndTime = getActualTimeOf(actualDay, DateConstants.WORKING_DAY_END_HOUR);
+        Calendar workingHourEndTime = getActualTimeOf(actualDay, DateTimeConstants.WORKING_DAY_END_HOUR);
         
         return workingHourEndTime.getTimeInMillis() - actualDay.getTimeInMillis();        
     }
@@ -104,13 +104,8 @@ public class DueDateCalculator {
             if (isWeekend(dueDateTime)) {
                 addWeekendHours();
             }
-
-            dueDateTime.add(
-                Calendar.HOUR_OF_DAY,
-                remainingTurnaroundTimeInHours > DateConstants.NUMBER_OF_WORKING_HOURS_PER_DAY ?
-                    DateConstants.NUMBER_OF_WORKING_HOURS_PER_DAY :
-                    remainingTurnaroundTimeInHours
-                );
+            
+            addWorkingHours();
 
             updateRemainingTurnaroundTime();
 
@@ -119,29 +114,41 @@ public class DueDateCalculator {
     
     private boolean turnAroundTimeFitsIn(Calendar actualDay) {
         return getRemainingWorkingTimeInMillisecondsOn(actualDay) >= 
-                remainingTurnaroundTimeInHours * DateConstants.ONE_HOUR_IN_MILLISECONDS;
+            remainingTurnaroundTimeInHours * DateTimeConstants.ONE_HOUR_IN_MILLISECONDS;
     }
     
     private void addNonWorkingHours() {
         dueDateTime.add(
-                Calendar.HOUR_OF_DAY, 
-                DateConstants.NUMBER_OF_NON_WORKING_HOURS_PER_DAY);
+            Calendar.HOUR_OF_DAY, 
+            DateTimeConstants.NUMBER_OF_NON_WORKING_HOURS_PER_DAY);
     }
     
     private boolean isWeekend(Calendar actualDay) {
         return (actualDay.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY || 
-                actualDay.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY);
+            actualDay.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY);
     }
     
     private void addWeekendHours() {
         dueDateTime.add(
-                Calendar.HOUR_OF_DAY, 
-                DateConstants.NUMBER_OF_WEEKEND_HOURS);
+            Calendar.HOUR_OF_DAY, 
+            DateTimeConstants.NUMBER_OF_WEEKEND_HOURS);
+    }
+    
+    private void addWorkingHours() {        
+        int hoursToAdd = 
+            remainingTurnaroundTimeInHours > DateTimeConstants.NUMBER_OF_WORKING_HOURS_PER_DAY ?
+            DateTimeConstants.NUMBER_OF_WORKING_HOURS_PER_DAY :
+            remainingTurnaroundTimeInHours;
+
+        dueDateTime.add(
+            Calendar.HOUR_OF_DAY,
+            hoursToAdd
+            );        
     }
 
     private void updateRemainingTurnaroundTime() {
-        if (remainingTurnaroundTimeInHours > DateConstants.NUMBER_OF_WORKING_HOURS_PER_DAY) {
-            remainingTurnaroundTimeInHours -= DateConstants.NUMBER_OF_WORKING_HOURS_PER_DAY;
+        if (remainingTurnaroundTimeInHours > DateTimeConstants.NUMBER_OF_WORKING_HOURS_PER_DAY) {
+            remainingTurnaroundTimeInHours -= DateTimeConstants.NUMBER_OF_WORKING_HOURS_PER_DAY;
         } else {
             remainingTurnaroundTimeInHours = 0;
         }
